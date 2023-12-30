@@ -1,86 +1,72 @@
 import tkinter as tk
-from PIL import Image, ImageTk
 
-class AutomataCelular:
-    def __init__(self, width, height, rule):
-        self.width = width
-        self.height = height
-        self.grid = [[0] * width for _ in range(height)]
-        self.rule = rule
-        self.current_generation = [0] * width
-        self.current_generation[width // 2] = 1
+# Lista vacia para guardar las generaciones
+generations = []
 
-    def procesar_generacion(self):
-        new_generation = [0] * self.width
-        for i in range(1, self.width - 1):
-            neighborhood = ''.join(map(str, self.current_generation[i-1:i+2]))
-            new_generation[i] = self.apply_rule(self.rule, neighborhood)
+# THE RULES
+rules = {
+    '000': 0,
+    '001': 1,
+    '010': 1,
+    '011': 0,
+    '100': 1,
+    '101': 0,
+    '110': 0,
+    '111': 1,
+}
 
-        self.grid.append(new_generation)
-        self.current_generation = new_generation
+# Longitud de la generacion
+gen_length = 64
 
-    @staticmethod
-    def apply_rule(rule, neighborhood):
-        binary_rule = format(rule, '08b')
-        return int(binary_rule[7 - int(neighborhood, 2)], 2)
 
-class InterfazGrafica:
-    def __init__(self, root, automata):
-        self.root = root
-        self.automata = automata
-
-        # Inicializar la interfaz gráfica
-        self.inicializar_interfaz()
-
-    def inicializar_interfaz(self):
-        # Configurar la ventana principal
-        self.root.title("Automata Celular")
-
-        # Cuadricula para mostrar el automata celular
-        self.canvas = tk.Canvas(self.root, width=550, height=400, borderwidth=0, highlightthickness=0, bg="white")
-        self.canvas.grid(row=0, column=0, rowspan=10)
-
-        # Botón para procesar la generación
-        procesar_btn = tk.Button(self.root, text="Procesar", command=self.procesar)
-        procesar_btn.grid(row=0, column=1)
-
-        # Casillas seleccionables
-        opciones = ["111", "110", "101", "100", "011", "010", "001", "000"]
-        self.var_reglas = [tk.IntVar() for _ in range(len(opciones))]
-
-        for i, opcion in enumerate(opciones):
-            checkbox = tk.Checkbutton(self.root, text=f"Casilla seleccionable-{opcion}", variable=self.var_reglas[i])
-            checkbox.grid(row=i + 1, column=1, sticky="w")
-
-    def procesar(self):
-        # Obtener la regla seleccionada
-        regla_binaria = "".join(str(var.get()) for var in self.var_reglas)
-        regla_decimal = int(regla_binaria, 2)
-
-        # Configurar la regla en el automata
-        self.automata.rule = regla_decimal
-
-        # Procesar la generación con la regla seleccionada
-        self.automata.procesar_generacion()
-
-        # Actualizar la cuadricula en la interfaz gráfica
-        self.actualizar_cuadricula()
-
-    def actualizar_cuadricula(self):
-        # Limpiar la cuadricula
-        self.canvas.delete("all")
-
-        # Dibujar todas las generaciones en la cuadricula
-        for y, generation in enumerate(self.automata.grid):
-            for x, cell in enumerate(generation):
-                color = "black" if cell == 1 else "white"
-                self.canvas.create_rectangle(x * 5, y * 5, (x + 1) * 5, (y + 1) * 5, fill=color)
-
-if __name__ == "__main__":
-    # Configuración del automata y la interfaz gráfica
-    automata = AutomataCelular(width=110, height=400, rule=150)  # Puedes ajustar el ancho y alto según tus necesidades
+# Funcion que crea la ventana y el canvas
+def setup():
+    global canvas
     root = tk.Tk()
-    interfaz = InterfazGrafica(root, automata)
+    root.title("Automatas Celulares de Wolfram")
+    
+    # Se crean las canvas y se les da un tamaño y color
+    canvas = tk.Canvas(root, width=800, height=800, bg='black')
+    canvas.pack()
 
-    # Iniciar la aplicación
+    # Se crea la primera generacion 
+    generation1 = [1 if i == gen_length // 2 else 0 for i in range(gen_length)]
+    generations.append(generation1)
+
+    # Se dibuja la primera generacion y se llama a la funcion next_generation para crear las siguientes
+    root.after(250, next_generation)
     root.mainloop()
+
+
+# Funcion que dibuja las generaciones en el canvas
+def draw():
+    canvas.delete("all")
+    s = 800 / gen_length
+
+    # Se recorre la lista de generaciones y se dibuja cada una de ellas
+    for j, gen in enumerate(generations):
+        for i, cell in enumerate(gen):
+            if cell == 1:
+                canvas.create_rectangle(i * s, j * s, (i + 1) * s, (j + 1) * s, fill='white')
+
+# Funcion que crea las siguientes generaciones y las guarda en la lista de generaciones 
+def next_generation():
+    last_gen = generations[-1]
+    next_gen = []
+
+    for i in range(len(last_gen)):
+        rule = ''.join(str(last_gen[j]) if 0 <= j < len(last_gen) else '0' for j in range(i - 1, i + 2))
+        next_gen.append(rules[rule])
+
+    generations.append(next_gen)
+
+    if len(generations) > 32:
+        generations.pop(0)
+
+    draw()
+    canvas.after(250, next_generation)
+
+
+# Se llama a la funcion setup para iniciar el programa (basicamente el main)
+if __name__ == "__main__":
+    setup()
