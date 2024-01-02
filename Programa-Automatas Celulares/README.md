@@ -16,6 +16,8 @@
 ---
 Los Autómatas Celulares de Wolfram son modelos matemáticos simples que consisten en una cuadrícula de celdas. Cada celda puede tener un estado específico, y evoluciona según reglas predefinidas. Stephen Wolfram propuso 256 reglas binarias que describen cómo las celdas cambian de estado en función de sus estados y los de sus vecinos. Estas reglas generan patrones visuales complejos y se han utilizado en diversos campos, como la teoría de la complejidad y la simulación de fenómenos naturales.
 
+Para saber mas acerca de los Autómatas Celulares de Wolfram acceder al siguiente [enlace](https://mathworld.wolfram.com/ElementaryCellularAutomaton.html).
+
 Una de las reglas descritas por Wolfram es la regla 150, determinada por:
 
 ```Haskell
